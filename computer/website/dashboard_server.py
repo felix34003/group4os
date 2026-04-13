@@ -9,6 +9,7 @@ import av
 import cv2
 from flask import Flask, render_template, Response, jsonify, request
 from queue import Queue, Empty
+from ultralytics import YOLO
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from utils import load_config, get_zenoh_config, register_signals
@@ -23,6 +24,39 @@ config      = load_config()
 stop_event  = threading.Event()
 
 codec = av.CodecContext.create('h264', 'r')
+
+# YOLOv8n — downloads yolov8n.pt on first run (~6 MB).
+# Uses CUDA automatically if available, otherwise CPU.
+yolo = YOLO('yolov8n.pt')
+
+# Colour palette: one BGR colour per class id (cycles every 80)
+_PALETTE = [
+    (56, 56, 255), (151, 157, 255), (31, 112, 255), (29, 178, 255),
+    (49, 210, 207), (10, 249, 72),  (23, 204, 146), (134, 219, 61),
+    (52, 147, 26),  (187, 212, 0),  (168, 153, 44), (255, 194, 0),
+    (255, 130, 0),  (255, 56, 0),   (255, 56, 132), (255, 0, 178),
+    (199, 0, 255),  (10, 10, 10),
+]
+
+def _class_color(cls_id):
+    return _PALETTE[int(cls_id) % len(_PALETTE)]
+
+
+def _draw_detections(img, results):
+    """Draw bounding boxes and labels from a YOLO Results object."""
+    for box in results.boxes:
+        x1, y1, x2, y2 = map(int, box.xyxy[0].tolist())
+        conf     = float(box.conf[0])
+        cls_id   = int(box.cls[0])
+        label    = f"{results.names[cls_id]} {conf:.2f}"
+        color    = _class_color(cls_id)
+
+        cv2.rectangle(img, (x1, y1), (x2, y2), color, 2)
+
+        (tw, th), _ = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.45, 1)
+        cv2.rectangle(img, (x1, y1 - th - 6), (x1 + tw + 4, y1), color, -1)
+        cv2.putText(img, label, (x1 + 2, y1 - 3),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.45, (255, 255, 255), 1)
 
 
 def _draw_osd(img):
@@ -55,6 +89,8 @@ def video_handler(sample):
             frames = codec.decode(packet)
             for frame in frames:
                 img = frame.to_ndarray(format='bgr24')
+                results = yolo(img, verbose=False)[0]
+                _draw_detections(img, results)
                 _draw_osd(img)
                 ok, jpg = cv2.imencode('.jpg', img, [cv2.IMWRITE_JPEG_QUALITY, 80])
                 if not ok:
