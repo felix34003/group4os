@@ -50,6 +50,12 @@ def main():
     last_speed = [None]                # track last sent speed to avoid flooding
 
     # ---- cmd_vel subscriber: PC → Arduino ----
+    # WORKAROUND: Arduino firmware has Q (CCW) and E (CW) rotation directions
+    # physically inverted — the motor wiring or encoder polarity causes the robot
+    # to spin CW when sent 'q' and CCW when sent 'e'.  Rather than reflash the
+    # Arduino, we swap them here so the UI remains intuitive (Q=CCW, E=CW).
+    _ROTATION_SWAP = {'q': 'e', 'e': 'q'}
+
     def cmd_handler(sample):
         """
         Expects JSON: {"cmd": "w", "speed": 150}
@@ -58,7 +64,7 @@ def main():
         """
         try:
             msg  = json.loads(bytes(sample.payload).decode('utf-8'))
-            cmd  = msg.get('cmd', 'x')
+            cmd  = _ROTATION_SWAP.get(msg.get('cmd', 'x'), msg.get('cmd', 'x'))
             speed = int(msg.get('speed', 150))
 
             with ser_lock:
