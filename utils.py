@@ -2,8 +2,20 @@ import json
 import psutil
 import time
 import os
+import signal
+import threading
 
 import zenoh
+
+def register_signals(stop_event):
+    """Register SIGINT and SIGTERM to set stop_event. Call from main thread only."""
+    def handler(_sig, _frame):
+        stop_event.set()
+    signal.signal(signal.SIGINT, handler)
+    try:
+        signal.signal(signal.SIGTERM, handler)
+    except (OSError, AttributeError, ValueError):
+        pass  # SIGTERM not fully supported on Windows
 
 def load_config():
     config_path = os.path.join(os.path.dirname(__file__), 'config.json')

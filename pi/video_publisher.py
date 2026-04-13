@@ -4,37 +4,35 @@ import time
 import sys
 import os
 import subprocess
+import threading
+import select
 
-# Add root to path for utils
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-from utils import load_config, get_heartbeat, get_zenoh_config
+from utils import load_config, get_heartbeat, get_zenoh_config, register_signals
 
 def main():
     config = load_config()
+    stop_event = threading.Event()
+    register_signals(stop_event)
+
     pi_ip = config['nodes']['pi']['ip']
-    
-    # Zenoh session setup
     print(f"Connecting to Zenoh as Pi ({pi_ip})...")
     z_config = get_zenoh_config("connect")
     session = zenoh.open(z_config)
 
-    # Publisher for video (H.264 Stream)
     pub_video = session.declare_publisher(
         config['topics']['video'],
         reliability=zenoh.Reliability.BEST_EFFORT,
         congestion_control=zenoh.CongestionControl.DROP
     )
-    # Publisher for heartbeat
     pub_hb = session.declare_publisher(f"{config['topics']['heartbeat']}/pi")
-    
-    # --- GO CRAZY: Hardware H.264 Pipeline ---
-    # We use FFmpeg to grab from V4L2 and encode in hardware
-    # -f v4l2: Force input format
-    # -i /dev/video0: Input device
-    # -c:v h264_v4l2m2m: Use Pi hardware H.264 encoder
-    # -b:v 2M: Bitrate 2Mbps (Good for 640x480)
-    # -g 30: GOP size (Keyframe every 1 second)
-    # -f h264 -: Output raw H.264 to stdout
+
+    def shutdown_handler(_sample):
+        print("Shutdown command received.", flush=True)
+        stop_event.set()
+
+    sub_shutdown = session.declare_subscriber(config['topics']['shutdown'], shutdown_handler)
+
     ffmpeg_cmd = [
         "ffmpeg",
         "-hide_banner", "-loglevel", "error",
@@ -54,22 +52,24 @@ def main():
 
     last_hb_time = 0
     status_file = os.path.join(os.path.dirname(__file__), "..", "felix_counter.txt")
-    
+    buffer_size = 4096
+
     print("Go Crazy Vision active. Sending Hardware H.264 to Zenoh...", flush=True)
 
     try:
-        # We read raw H.264 packets (NAL units) from ffmpeg stdout
-        # A simple way is to read in chunks and let the decoder handle it
-        buffer_size = 4096 
-        while True:
+        while not stop_event.is_set():
+            # 1-second timeout so we can check stop_event even if ffmpeg stalls
+            ready, _, _ = select.select([process.stdout], [], [], 1.0)
+            if not ready:
+                continue
+
             data = process.stdout.read(buffer_size)
             if not data:
+                print("FFmpeg pipe closed.", flush=True)
                 break
-            
-            # Publish raw H.264 bytes
+
             pub_video.put(data)
-            
-            # --- HEARTBEAT & TELEMETRY ---
+
             now = time.time()
             if now - last_hb_time > 2.0:
                 last_counter = 0
@@ -77,17 +77,16 @@ def main():
                     if os.path.exists(status_file):
                         with open(status_file, "r") as f:
                             last_counter = int(f.read().strip())
-                except: pass
-
+                except Exception:
+                    pass
                 hb = get_heartbeat("Pi", last_counter=last_counter)
                 pub_hb.put(json.dumps(hb))
                 last_hb_time = now
-
-    except KeyboardInterrupt:
-        print("Stopping Pi Video Publisher...")
     finally:
+        del sub_shutdown
         process.terminate()
         session.close()
+        print("Pi Video Publisher stopped.", flush=True)
 
 if __name__ == "__main__":
     main()

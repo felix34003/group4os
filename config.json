@@ -15,7 +15,8 @@
     "topics": {
         "video": "felix/video",
         "counter": "felix/counter",
-        "heartbeat": "felix/nodes"
+        "heartbeat": "felix/nodes",
+        "shutdown": "felix/control/shutdown"
     },
     "config": {
         "video_fps": 30,

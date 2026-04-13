@@ -2,239 +2,114 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FelixOS | Mission Control</title>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <title>FelixOS</title>
     <style>
-        :root {
-            --primary: #00f2fe;
-            --secondary: #4facfe;
-            --bg: #0b0e14;
-            --card-bg: rgba(255, 255, 255, 0.05);
-            --border: rgba(255, 255, 255, 0.1);
-            --text: #e0e0e0;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
-            background-color: var(--bg);
-            color: var(--text);
-            font-family: 'Roboto', sans-serif;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            height: 100vh;
-            overflow: hidden;
-        }
-
-        /* Sidebar Glassmorphism */
-        .sidebar {
-            width: 300px;
-            background: var(--card-bg);
-            backdrop-filter: blur(10px);
-            border-right: 1px solid var(--border);
-            padding: 20px;
+            background: #111;
+            color: #eee;
+            font-family: monospace;
             display: flex;
             flex-direction: column;
-            gap: 20px;
-            box-shadow: 10px 0 30px rgba(0,0,0,0.5);
+            align-items: center;
+            padding: 20px;
+            gap: 16px;
         }
 
-        h1 {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 1.5rem;
-            margin: 0;
-            background: linear-gradient(45deg, var(--primary), var(--secondary));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            text-shadow: 0 0 20px rgba(0, 242, 254, 0.3);
+        h1 { font-size: 1.1rem; color: #0cf; letter-spacing: 2px; }
+
+        #video-feed {
+            width: 100%;
+            max-width: 800px;
+            border: 1px solid #333;
+            background: #000;
+            display: block;
         }
 
-        .status-card {
-            background: rgba(0, 0, 0, 0.3);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 15px;
-            transition: transform 0.3s ease;
+        #stats {
+            width: 100%;
+            max-width: 800px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
         }
 
-        .status-card:hover {
-            transform: translateY(-5px);
-            border-color: var(--primary);
+        .stat {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 4px;
+            padding: 10px 16px;
+            min-width: 140px;
         }
 
-        .card-title {
-            font-size: 0.8rem;
+        .stat-label {
+            font-size: 0.65rem;
+            color: #666;
             text-transform: uppercase;
             letter-spacing: 1px;
-            color: #888;
-            margin-bottom: 5px;
+            margin-bottom: 4px;
         }
 
-        .card-value {
+        .stat-value {
             font-size: 1.2rem;
-            font-weight: 700;
-            color: var(--primary);
+            color: #0cf;
         }
 
-        .node-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 0;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .badge {
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 0.7rem;
-            font-weight: bold;
-        }
-
-        .badge-online { background: #00c853; color: white; }
-        .badge-offline { background: #ff5252; color: white; }
-
-        /* Main Viewport */
-        .main {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-        }
-
-        .video-container {
-            width: 90%;
-            max-width: 1000px;
-            aspect-ratio: 16/9;
-            background: #000;
-            border-radius: 20px;
-            border: 2px solid var(--border);
-            overflow: hidden;
-            box-shadow: 0 0 50px rgba(0, 242, 254, 0.1);
-            position: relative;
-        }
-
-        .video-container img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-        }
-
-        .overlay-text {
-            position: absolute;
-            bottom: 20px;
-            left: 20px;
-            background: rgba(0,0,0,0.6);
-            padding: 5px 15px;
-            border-radius: 8px;
-            font-size: 0.9rem;
-            color: var(--primary);
-        }
-
-        .controls {
-            margin-top: 20px;
-            display: flex;
-            gap: 15px;
-        }
-
-        button {
-            background: transparent;
-            border: 1px solid var(--primary);
-            color: var(--primary);
-            padding: 10px 20px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-family: 'Orbitron', sans-serif;
-            transition: all 0.3s ease;
-        }
-
-        button:hover {
-            background: var(--primary);
-            color: var(--bg);
-            box-shadow: 0 0 20px rgba(0, 242, 254, 0.4);
-        }
-
+        .offline { color: #f55; }
     </style>
 </head>
 <body>
-    <div class="sidebar">
-        <h1>FelixOS</h1>
-        
-        <div class="status-card">
-            <div class="card-title">System Status</div>
-            <div class="node-item">
-                <span>Raspberry Pi</span>
-                <span id="pi-status" class="badge badge-offline">OFFLINE</span>
-            </div>
-            <div class="node-item">
-                <span>Computer</span>
-                <span class="badge badge-online">ONLINE</span>
-            </div>
-        </div>
+    <h1>FELIXOS</h1>
 
-        <div class="status-card">
-            <div class="card-title">Live Telemetry</div>
-            <div class="node-item">
-                <span>Core Temp</span>
-                <span id="pi-temp" class="card-value">--°C</span>
-            </div>
-            <div class="node-item">
-                <span>CPU Load</span>
-                <span id="pi-cpu" class="card-value">--%</span>
-            </div>
-        </div>
+    <img id="video-feed" src="/video_feed" alt="No video">
 
-        <div class="status-card">
-            <div class="card-title">Mission Progress</div>
-            <div class="node-item">
-                <span>Step Count</span>
-                <span id="mission-counter" class="card-value">0</span>
-            </div>
+    <div id="stats">
+        <div class="stat">
+            <div class="stat-label">Step Counter</div>
+            <div class="stat-value" id="counter">--</div>
         </div>
-
-        <div style="flex: 1;"></div>
-        <div style="font-size: 0.7rem; color: #555;">
-            ZENOH 1.0 MESH | TAILSCALE VPN
-        </div>
-    </div>
-
-    <div class="main">
-        <div class="video-container">
-            <img id="video-feed" src="/video_feed" alt="Video feed will appear here...">
-            <div class="overlay-text">LIVE VIEW | HD-3000</div>
-        </div>
-        
-        <div class="controls">
-            <button onclick="location.reload()">REFRESH</button>
-            <button onclick="window.close()">SHUTDOWN</button>
-        </div>
+        <!-- Additional stat cards are injected here by JS as nodes report in -->
     </div>
 
     <script>
-        // Fetch stats every second
-        async function updateStats() {
-            try {
-                const response = await fetch('/stats');
-                const stats = await response.json();
-                
-                if (stats.pi) {
-                    document.getElementById('pi-status').innerText = 'ONLINE';
-                    document.getElementById('pi-status').className = 'badge badge-online';
-                    document.getElementById('pi-temp').innerText = stats.pi.temp + '°C';
-                    document.getElementById('pi-cpu').innerText = stats.pi.cpu_percent + '%';
-                    document.getElementById('mission-counter').innerText = stats.pi.last_counter || '0';
-                } else {
-                    document.getElementById('pi-status').innerText = 'OFFLINE';
-                    document.getElementById('pi-status').className = 'badge badge-offline';
-                }
-            } catch (e) {
-                console.error("Failed to fetch stats", e);
+        const statsEl = document.getElementById('stats');
+        const knownStats = {};
+
+        function ensureStat(id, label) {
+            if (!knownStats[id]) {
+                const card = document.createElement('div');
+                card.className = 'stat';
+                card.innerHTML = `<div class="stat-label">${label}</div>
+                                  <div class="stat-value" id="stat-${id}">--</div>`;
+                statsEl.appendChild(card);
+                knownStats[id] = true;
             }
+            return document.getElementById(`stat-${id}`);
         }
 
-        setInterval(updateStats, 1000);
+        async function update() {
+            try {
+                const data = await fetch('/stats').then(r => r.json());
+
+                // Step counter from Pi heartbeat
+                if (data.Pi) {
+                    document.getElementById('counter').textContent = data.Pi.last_counter ?? '--';
+                }
+
+                // One card per reporting node, per metric
+                for (const [node, s] of Object.entries(data)) {
+                    ensureStat(`${node}-cpu`,  `${node} CPU`).textContent  = s.cpu_percent  + '%';
+                    ensureStat(`${node}-mem`,  `${node} MEM`).textContent  = s.memory_percent + '%';
+                    if (s.temp) {
+                        ensureStat(`${node}-temp`, `${node} Temp`).textContent = s.temp + '°C';
+                    }
+                }
+            } catch (_) {}
+        }
+
+        setInterval(update, 1000);
+        update();
     </script>
 </body>
 </html>
