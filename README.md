@@ -204,6 +204,16 @@ Edit `config.json` — the only values that change between machines:
 > **Moving to a new PC?** The only required changes are `nodes.pc.ip` and `zenoh.connect[0]`.
 > Everything else (Pi IP, SSH creds, Arduino port) stays the same across machines.
 
+### Verify Connection
+
+Before launching the full system, verify that your PC can authenticate with the Raspberry Pi:
+
+```bash
+python test_ssh.py
+```
+
+If this fails with an `AuthenticationException`, check your credentials in `config.json` and ensure the Pi is reachable.
+
 ### Launch
 
 ```bash
