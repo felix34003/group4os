@@ -76,7 +76,7 @@ def main():
         session.declare_subscriber(config['topics']['shutdown'], shutdown_handler),
     ]
 
-    print("Go Crazy OSD Active. Press 'q' in video window to exit.")
+    print("Go Crazy OSD Active. Press ESC in video window to exit.")
 
     # cv2 GUI must run on the main thread
     while not stop_event.is_set():
@@ -87,7 +87,7 @@ def main():
             cv2.imshow("FelixOS Live", frame)
 
         key = cv2.waitKey(30)
-        if key & 0xFF == ord('q'):
+        if key & 0xFF == 27:  # ESC
             stop_event.set()
 
     cv2.destroyAllWindows()

@@ -21,7 +21,7 @@ PI_SYNC_FILES = [
 
 def identify_running_processes():
     current_pid = os.getpid()
-    target_scripts = ['video_receiver_osd.py', 'counter_publisher.py',
+    target_scripts = ['viedeo_receiver_osd.py', 'counter_publisher.py',
                       'orchestrator.py', 'start_all.py']
     print("Checking for existing FelixOS processes on PC...")
     found_any = False
@@ -106,6 +106,8 @@ def main():
                           os.path.join(LOCAL_ROOT, "computer/topics/counter_publisher.py")]),
         subprocess.Popen([sys.executable,
                           os.path.join(LOCAL_ROOT, "computer/video_receiver_osd.py")]),
+        subprocess.Popen([sys.executable,
+                          os.path.join(LOCAL_ROOT, "computer/website/dashboard_server.py")]),
     ]
 
     # 7. Run the orchestrator in the foreground — it owns the shutdown lifecycle
