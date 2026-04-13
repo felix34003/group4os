@@ -190,11 +190,19 @@ pip install eclipse-zenoh pyserial psutil
 
 ### Configuration
 
-Edit `config.json`:
-- `nodes.pi.ip` — Pi's Tailscale IP
-- `nodes.pi.user` / `nodes.pi.ssh_pass` — SSH credentials
-- `nodes.pi.venv` — path to Python venv binary on the Pi
-- `arduino.serial_port` — default `/dev/arduino` (udev symlink); change if different
+Edit `config.json` — the only values that change between machines:
+
+| Field | What to set |
+|---|---|
+| `nodes.pc.ip` | This PC's Tailscale IP (`tailscale ip -4`) |
+| `zenoh.connect[0]` | `tcp/<THIS_PC_TAILSCALE_IP>:7447` (must match `nodes.pc.ip`) |
+| `nodes.pi.ip` | Pi's Tailscale IP |
+| `nodes.pi.user` / `nodes.pi.ssh_pass` | Pi SSH credentials |
+| `nodes.pi.venv` | Path to Python venv binary on the Pi |
+| `arduino.serial_port` | Default `/dev/arduino`; change if udev symlink differs |
+
+> **Moving to a new PC?** The only required changes are `nodes.pc.ip` and `zenoh.connect[0]`.
+> Everything else (Pi IP, SSH creds, Arduino port) stays the same across machines.
 
 ### Launch
 
