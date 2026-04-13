@@ -13,66 +13,87 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 20px;
-            gap: 16px;
+            padding: 16px;
+            gap: 12px;
+            min-height: 100vh;
         }
 
         h1 { font-size: 1.1rem; color: #0cf; letter-spacing: 2px; }
-        h2 { font-size: 0.75rem; color: #555; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 8px; }
+        h2 { font-size: 0.7rem; color: #555; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 8px; }
+
+        /* ── main two-column grid ── */
+        #main-grid {
+            display: flex;
+            gap: 12px;
+            width: 100%;
+            max-width: 1200px;
+            align-items: flex-start;
+        }
+
+        /* left column: video + drive control */
+        #left-col {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            flex: 1 1 0;
+            min-width: 0;
+        }
 
         #video-feed {
             width: 100%;
-            max-width: 800px;
             border: 1px solid #333;
             background: #000;
             display: block;
         }
 
-        /* ── shared panel wrapper ── */
+        /* right column: odometry + node status */
+        #right-col {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            width: 300px;
+            flex-shrink: 0;
+        }
+
+        /* ── shared panel ── */
         .panel {
-            width: 100%;
-            max-width: 800px;
             background: #151515;
             border: 1px solid #2a2a2a;
             border-radius: 4px;
-            padding: 14px 16px;
+            padding: 12px 14px;
         }
 
         /* ── stat cards ── */
         .card-row {
             display: flex;
             flex-wrap: wrap;
-            gap: 10px;
+            gap: 8px;
         }
 
         .stat {
             background: #1a1a1a;
             border: 1px solid #333;
             border-radius: 4px;
-            padding: 10px 16px;
-            min-width: 120px;
+            padding: 8px 12px;
+            min-width: 100px;
+            flex: 1 1 auto;
         }
 
         .stat-label {
-            font-size: 0.65rem;
+            font-size: 0.6rem;
             color: #555;
             text-transform: uppercase;
             letter-spacing: 1px;
-            margin-bottom: 4px;
+            margin-bottom: 3px;
         }
 
-        .stat-value {
-            font-size: 1.1rem;
-            color: #0cf;
-        }
-
-        /* ── odometry cards ── */
+        .stat-value { font-size: 1rem; color: #0cf; }
         .odom-value { color: #4f4; }
 
         /* ── drive control ── */
         #control-layout {
             display: flex;
-            gap: 24px;
+            gap: 20px;
             align-items: flex-start;
             flex-wrap: wrap;
         }
@@ -108,14 +129,13 @@
         .btn.stop { color: #f55; border-color: #533; }
         .btn.stop.active { background: #3a0a0a; border-color: #f55; color: #f55; }
 
-        /* empty grid cell */
         .btn-empty { visibility: hidden; }
 
         #speed-section {
             display: flex;
             flex-direction: column;
             gap: 10px;
-            min-width: 160px;
+            min-width: 140px;
         }
 
         #speed-section label {
@@ -125,15 +145,9 @@
             letter-spacing: 1px;
         }
 
-        #speed-display {
-            font-size: 1.4rem;
-            color: #0cf;
-        }
+        #speed-display { font-size: 1.4rem; color: #0cf; }
 
-        input[type=range] {
-            width: 100%;
-            accent-color: #0cf;
-        }
+        input[type=range] { width: 100%; accent-color: #0cf; }
 
         #status-row {
             display: flex;
@@ -149,90 +163,83 @@
             letter-spacing: 1px;
         }
 
-        #active-cmd {
-            font-size: 0.85rem;
-            color: #888;
-        }
-
+        #active-cmd { font-size: 0.85rem; color: #888; }
         #active-cmd.moving { color: #4f4; }
 
-        #keyboard-hint {
-            font-size: 0.6rem;
-            color: #444;
-            margin-top: 6px;
-        }
+        #keyboard-hint { font-size: 0.6rem; color: #444; margin-top: 6px; }
     </style>
 </head>
 <body>
     <h1>FELIXOS</h1>
 
-    <img id="video-feed" src="/video_feed" alt="No video">
+    <div id="main-grid">
 
-    <!-- ── Drive Control ── -->
-    <div class="panel">
-        <h2>Drive Control</h2>
-        <div id="control-layout">
+        <!-- ── Left: video + drive control ── -->
+        <div id="left-col">
+            <img id="video-feed" src="/video_feed" alt="No video">
 
-            <!-- D-Pad grid:
-                 Q  W  E
-                 A  X  D
-                    S     -->
-            <div id="dpad">
-                <button class="btn" data-cmd="q"><span class="key">Q</span><span class="hint">CCW</span></button>
-                <button class="btn" data-cmd="w"><span class="key">W</span><span class="hint">FWD</span></button>
-                <button class="btn" data-cmd="e"><span class="key">E</span><span class="hint">CW</span></button>
-                <button class="btn" data-cmd="a"><span class="key">A</span><span class="hint">LEFT</span></button>
-                <button class="btn stop" data-cmd="x"><span class="key">X</span><span class="hint">STOP</span></button>
-                <button class="btn" data-cmd="d"><span class="key">D</span><span class="hint">RIGHT</span></button>
-                <div class="btn-empty"></div>
-                <button class="btn" data-cmd="s"><span class="key">S</span><span class="hint">REV</span></button>
-                <div class="btn-empty"></div>
-            </div>
+            <div class="panel">
+                <h2>Drive Control</h2>
+                <div id="control-layout">
+                    <div id="dpad">
+                        <button class="btn" data-cmd="q"><span class="key">Q</span><span class="hint">CCW</span></button>
+                        <button class="btn" data-cmd="w"><span class="key">W</span><span class="hint">FWD</span></button>
+                        <button class="btn" data-cmd="e"><span class="key">E</span><span class="hint">CW</span></button>
+                        <button class="btn" data-cmd="a"><span class="key">A</span><span class="hint">LEFT</span></button>
+                        <button class="btn stop" data-cmd="x"><span class="key">X</span><span class="hint">STOP</span></button>
+                        <button class="btn" data-cmd="d"><span class="key">D</span><span class="hint">RIGHT</span></button>
+                        <div class="btn-empty"></div>
+                        <button class="btn" data-cmd="s"><span class="key">S</span><span class="hint">REV</span></button>
+                        <div class="btn-empty"></div>
+                    </div>
 
-            <!-- Speed + status -->
-            <div id="speed-section">
-                <label>Speed</label>
-                <div id="speed-display">150</div>
-                <input type="range" id="speed-slider" min="0" max="255" value="150">
+                    <div id="speed-section">
+                        <label>Speed</label>
+                        <div id="speed-display">150</div>
+                        <input type="range" id="speed-slider" min="0" max="255" value="150">
 
-                <div id="status-row">
-                    <span id="active-label">Status</span>
-                    <span id="active-cmd">IDLE</span>
+                        <div id="status-row">
+                            <span id="active-label">Status</span>
+                            <span id="active-cmd">IDLE</span>
+                        </div>
+
+                        <button class="btn" id="reset-btn" style="width:100%;height:36px;margin-top:4px;">
+                            <span class="key" style="font-size:0.8rem">R — Reset Ticks</span>
+                        </button>
+
+                        <div id="keyboard-hint">
+                            WASD / QE / X or click buttons<br>
+                            Hold to move · Release to stop
+                        </div>
+                    </div>
                 </div>
+            </div>
+        </div>
 
-                <button class="btn" id="reset-btn" style="width:100%;height:36px;margin-top:4px;">
-                    <span class="key" style="font-size:0.8rem">R — Reset Ticks</span>
-                </button>
+        <!-- ── Right: odometry + node status ── -->
+        <div id="right-col">
+            <div class="panel">
+                <h2>Odometry</h2>
+                <div class="card-row">
+                    <div class="stat"><div class="stat-label">X (m)</div><div class="stat-value odom-value" id="odom-x">--</div></div>
+                    <div class="stat"><div class="stat-label">Y (m)</div><div class="stat-value odom-value" id="odom-y">--</div></div>
+                    <div class="stat"><div class="stat-label">θ (deg)</div><div class="stat-value odom-value" id="odom-theta">--</div></div>
+                    <div class="stat"><div class="stat-label">Ticks FR</div><div class="stat-value odom-value" id="odom-tfr">--</div></div>
+                    <div class="stat"><div class="stat-label">Ticks RL</div><div class="stat-value odom-value" id="odom-trl">--</div></div>
+                </div>
+            </div>
 
-                <div id="keyboard-hint">
-                    WASD / QE / X or click buttons<br>
-                    Hold to move · Release to stop
+            <div class="panel">
+                <h2>Node Status</h2>
+                <div id="stats" class="card-row">
+                    <div class="stat">
+                        <div class="stat-label">Step Counter</div>
+                        <div class="stat-value" id="counter">--</div>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- ── Odometry ── -->
-    <div class="panel">
-        <h2>Odometry</h2>
-        <div class="card-row">
-            <div class="stat"><div class="stat-label">X (m)</div><div class="stat-value odom-value" id="odom-x">--</div></div>
-            <div class="stat"><div class="stat-label">Y (m)</div><div class="stat-value odom-value" id="odom-y">--</div></div>
-            <div class="stat"><div class="stat-label">θ (deg)</div><div class="stat-value odom-value" id="odom-theta">--</div></div>
-            <div class="stat"><div class="stat-label">Ticks FR</div><div class="stat-value odom-value" id="odom-tfr">--</div></div>
-            <div class="stat"><div class="stat-label">Ticks RL</div><div class="stat-value odom-value" id="odom-trl">--</div></div>
-        </div>
-    </div>
-
-    <!-- ── Node Stats (auto-generated) ── -->
-    <div class="panel">
-        <h2>Node Status</h2>
-        <div id="stats" class="card-row">
-            <div class="stat">
-                <div class="stat-label">Step Counter</div>
-                <div class="stat-value" id="counter">--</div>
-            </div>
-        </div>
     </div>
 
     <script>
@@ -302,7 +309,7 @@
             const cmd = keyMap[ev.key];
             if (!cmd) return;
             ev.preventDefault();
-            if (heldKeys.has(ev.key)) return;   // already held
+            if (heldKeys.has(ev.key)) return;
             heldKeys.add(ev.key);
             startHold(cmd);
         });
@@ -314,7 +321,7 @@
             if (cmd === activeCmd) stopHold();
         });
 
-        // ── D-Pad buttons (pointer events for mouse + touch) ───
+        // ── D-Pad buttons ───────────────────────────────────────
         document.querySelectorAll('.btn[data-cmd]').forEach(btn => {
             const cmd = btn.dataset.cmd;
 
@@ -337,13 +344,12 @@
         });
 
         // ── Speed slider ───────────────────────────────────────
-        const slider   = document.getElementById('speed-slider');
+        const slider    = document.getElementById('speed-slider');
         const speedDisp = document.getElementById('speed-display');
 
         slider.addEventListener('input', () => {
             currentSpeed = parseInt(slider.value);
             speedDisp.textContent = currentSpeed;
-            // Push speed to Arduino immediately so it takes effect before next move
             fetch('/cmd', {
                 method:  'POST',
                 headers: {'Content-Type': 'application/json'},

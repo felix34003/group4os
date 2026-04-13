@@ -5,6 +5,8 @@ import os
 import time
 import threading
 import webbrowser
+import av
+import cv2
 from flask import Flask, render_template, Response, jsonify, request
 from queue import Queue, Empty
 
@@ -20,18 +22,49 @@ pub_cmd_vel = None          # set once zenoh_worker initialises
 config      = load_config()
 stop_event  = threading.Event()
 
+codec = av.CodecContext.create('h264', 'r')
+
+
+def _draw_osd(img):
+    """Burn node-stats overlay onto img in-place (same style as OSD window)."""
+    overlay = img.copy()
+    cv2.rectangle(overlay, (5, 5), (315, 80), (0, 0, 0), -1)
+    cv2.addWeighted(overlay, 0.5, img, 0.5, 0, img)
+    cv2.putText(img, "FELIX MISSION CONTROL [H.264]", (10, 20),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 255), 1)
+    y = 40
+    for node, stats in node_stats.items():
+        temp    = stats.get('temp', '--')
+        cpu     = stats.get('cpu_percent', '--')
+        last_c  = stats.get('last_counter', '0')
+        temp_str = f"| {temp}C" if temp not in (0.0, '--') else ""
+        cv2.putText(img, f"{node}: {cpu}% CPU {temp_str}", (10, y),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.4, (0, 255, 0), 1)
+        cv2.putText(img, f"STEP: {last_c}", (10, y + 15),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255, 255, 0), 1)
+        y += 35
+
 
 def video_handler(sample):
     try:
-        data = bytes(sample.payload)
-        if frame_queue.full():
-            try:
-                frame_queue.get_nowait()
-            except Empty:
-                pass
-        frame_queue.put_nowait(data)
-    except Exception:
-        pass
+        packets = codec.parse(bytes(sample.payload))
+        for packet in packets:
+            frames = codec.decode(packet)
+            for frame in frames:
+                img = frame.to_ndarray(format='bgr24')
+                _draw_osd(img)
+                ok, jpg = cv2.imencode('.jpg', img, [cv2.IMWRITE_JPEG_QUALITY, 80])
+                if not ok:
+                    continue
+                data = jpg.tobytes()
+                if frame_queue.full():
+                    try:
+                        frame_queue.get_nowait()
+                    except Empty:
+                        pass
+                frame_queue.put_nowait(data)
+    except Exception as e:
+        print(f"[video_handler] ERROR: {e}", flush=True)
 
 
 def heartbeat_handler(sample):

@@ -105,8 +105,6 @@ def main():
         subprocess.Popen([sys.executable,
                           os.path.join(LOCAL_ROOT, "computer/topics/counter_publisher.py")]),
         subprocess.Popen([sys.executable,
-                          os.path.join(LOCAL_ROOT, "computer/video_receiver_osd.py")]),
-        subprocess.Popen([sys.executable,
                           os.path.join(LOCAL_ROOT, "computer/website/dashboard_server.py")]),
     ]
 
