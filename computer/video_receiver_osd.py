@@ -84,7 +84,7 @@ def main():
             frame = latest_frame[0]
 
         if frame is not None:
-            cv2.imshow("FelixOS Live", frame)
+            cv2.imshow("group4os Live", frame)
 
         key = cv2.waitKey(30)
         if key & 0xFF == 27:  # ESC

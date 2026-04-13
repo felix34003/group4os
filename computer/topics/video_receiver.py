@@ -42,7 +42,7 @@ def main():
                                 cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
                     y_offset += 30
                 
-                cv2.imshow("FelixOS - Video Stream", frame)
+                cv2.imshow("group4os - Video Stream", frame)
                 if cv2.waitKey(1) & 0xFF == ord('q'):
                     return
         except Exception as e:

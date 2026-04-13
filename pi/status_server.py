@@ -47,7 +47,7 @@ def main():
             self.send_response(200)
             self.send_header("Content-type", "text/plain")
             self.end_headers()
-            response = "=== FelixOS Network Status ===\n\n"
+            response = "=== group4os Network Status ===\n\n"
             response += f"Live Counter: {last_counter}\n\n"
             response += "Active Nodes:\n"
             for node, stats in node_stats.items():

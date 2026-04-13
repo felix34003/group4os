@@ -16,7 +16,7 @@ def main():
     stop_event = threading.Event()
     register_signals(stop_event)
 
-    print("=== FelixOS Orchestrator ===")
+    print("=== group4os Orchestrator ===")
     z_config = get_zenoh_config("listen")
     session = zenoh.open(z_config)
 

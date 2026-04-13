@@ -1,6 +1,6 @@
-# FelixOS | Robotics Middleware
+# group4os | Robotics Middleware
 
-FelixOS is a cross-platform robotics bridge connecting a Windows workstation to a Raspberry Pi over **Zenoh 1.0** pub/sub and **Tailscale VPN**. It streams live H.264 video, publishes differential-drive odometry, and exposes a browser-based mission control dashboard with real-time drive control.
+group4os is a cross-platform robotics bridge connecting a Windows workstation to a Raspberry Pi over **Zenoh 1.0** pub/sub and **Tailscale VPN**. It streams live H.264 video, publishes differential-drive odometry, and exposes a browser-based mission control dashboard with real-time drive control.
 
 ---
 
@@ -54,7 +54,7 @@ FelixOS is a cross-platform robotics bridge connecting a Windows workstation to 
 ## Directory Structure
 
 ```
-FelixOS/
+group4os/
 ├── start_all.py              # Entry point — syncs Pi, launches everything
 ├── config.json               # All IPs, topic names, video/counter/arduino config
 ├── utils.py                  # Shared: load_config, get_heartbeat, get_zenoh_config, register_signals
@@ -204,7 +204,7 @@ python start_all.py
 
 This will:
 1. Ping the Pi
-2. SSH in and kill any old FelixOS processes
+2. SSH in and kill any old group4os processes
 3. Sync the latest code to the Pi
 4. Start Pi nodes in the background (`video_publisher`, `counter_subscriber`, `status_server`, `arduino_bridge`)
 5. Start PC nodes as subprocesses (`counter_publisher`, `dashboard_server`)
@@ -308,4 +308,4 @@ The dashboard will automatically create a stat card for the new node the first t
 
 ---
 
-Maintained at: [felix34003/FelixOS](https://github.com/felix34003/FelixOS)
+Maintained at: [felix34003/group4os](https://github.com/felix34003/group4os)

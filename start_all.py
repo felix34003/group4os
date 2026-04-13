@@ -23,7 +23,7 @@ def identify_running_processes():
     current_pid = os.getpid()
     target_scripts = ['viedeo_receiver_osd.py', 'counter_publisher.py',
                       'orchestrator.py', 'start_all.py']
-    print("Checking for existing FelixOS processes on PC...")
+    print("Checking for existing group4os processes on PC...")
     found_any = False
     for proc in psutil.process_iter(['pid', 'name', 'cmdline']):
         try:
@@ -36,12 +36,12 @@ def identify_running_processes():
         except (psutil.NoSuchProcess, psutil.AccessDenied):
             continue
     if not found_any:
-        print("  No other FelixOS processes found.")
+        print("  No other group4os processes found.")
 
 
 def sync_code(conn, pi_cfg):
     """Push latest local files to the Pi before starting any nodes."""
-    pi_proj_dir = f"/home/{pi_cfg['user']}/FelixOS"
+    pi_proj_dir = f"/home/{pi_cfg['user']}/group4os"
     conn.run(f"mkdir -p {pi_proj_dir}/pi", timeout=10)
     print("Syncing code to Pi...")
     for local_rel, remote_rel in PI_SYNC_FILES:
@@ -56,7 +56,7 @@ def main():
     config = load_config()
     pi_cfg = config['nodes']['pi']
 
-    print("=== FelixOS One-Click Startup ===")
+    print("=== group4os One-Click Startup ===")
     identify_running_processes()
 
     # 1. Ping check
@@ -75,7 +75,7 @@ def main():
         connect_kwargs={"password": pi_cfg['ssh_pass']}
     )
 
-    # 3. Kill any old FelixOS processes on the Pi
+    # 3. Kill any old group4os processes on the Pi
     print("Killing old Pi processes...")
     conn.run("pkill -u ece_441 python3 || true", timeout=10, warn=True)
     time.sleep(0.5)
@@ -84,7 +84,7 @@ def main():
     sync_code(conn, pi_cfg)
 
     # 5. Start Pi nodes in the background
-    pi_proj_dir = f"/home/{pi_cfg['user']}/FelixOS"
+    pi_proj_dir = f"/home/{pi_cfg['user']}/group4os"
     pi_nodes = [
         "pi/video_publisher.py",
         "pi/counter_subscriber.py",
@@ -125,7 +125,7 @@ def main():
         for proc in pc_procs:
             if proc.poll() is None:
                 proc.terminate()
-        print("FelixOS session ended.")
+        print("group4os session ended.")
 
 
 if __name__ == "__main__":
