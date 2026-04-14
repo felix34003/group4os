@@ -14,7 +14,7 @@ stop_event  = threading.Event()
 
 pub_cmd_vel   = None
 pub_lock      = threading.Lock()
-control_on    = False
+control_on    = True
 current_speed = [150]
 desired_cmd   = [None]   # None = idle
 held_keys     = set()
@@ -172,7 +172,7 @@ def main():
     print("  Stop:    X")
     print("  Reset:   R (encoder ticks)")
     print("  Speed:   + / -  (step 10, range 0-255)")
-    print("  Toggle:  ` (backtick) — starts DISABLED")
+    print("  Toggle:  ` (backtick) — pause/resume control")
     print("  Quit:    Ctrl+C")
     print("=" * 57)
     print("Connecting to Zenoh...", flush=True)
