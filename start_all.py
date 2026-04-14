@@ -75,10 +75,11 @@ def main():
         connect_kwargs={"password": pi_cfg['ssh_pass']}
     )
 
-    # 3. Kill any old group4os processes on the Pi
+    # 3. Kill any old group4os processes on the Pi (python AND bash restart-loop wrappers)
     print("Killing old Pi processes...")
     conn.run("pkill -u ece_441 python3 || true", timeout=10, warn=True)
-    time.sleep(0.5)
+    conn.run("pkill -u ece_441 -f 'while true' || true", timeout=10, warn=True)
+    time.sleep(1.0)
 
     # 4. Sync code — Pi will always run the same version as the PC
     sync_code(conn, pi_cfg)
@@ -93,7 +94,9 @@ def main():
     ]
     print("\nStarting Pi nodes...")
     for script in pi_nodes:
-        cmd = (f"nohup {pi_cfg['venv']} {pi_proj_dir}/{script} "
+        # Wrap in a restart loop so crashed nodes come back within 1s
+        cmd = (f"nohup bash -c 'while true; do "
+               f"{pi_cfg['venv']} {pi_proj_dir}/{script}; sleep 1; done' "
                f">> {pi_proj_dir}/pi_nodes.log 2>&1 &")
         conn.run(cmd, disown=True)
         print(f"  Launched {script}")
