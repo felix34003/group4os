@@ -90,83 +90,12 @@
         .stat-value { font-size: 1rem; color: #0cf; }
         .odom-value { color: #4f4; }
 
-        /* ── drive control ── */
-        #control-layout {
-            display: flex;
-            gap: 20px;
-            align-items: flex-start;
-            flex-wrap: wrap;
-        }
-
-        #dpad {
-            display: grid;
-            grid-template-columns: repeat(3, 52px);
-            grid-template-rows:    repeat(3, 52px);
-            gap: 4px;
-        }
-
-        .btn {
-            background: #222;
-            border: 1px solid #444;
-            border-radius: 4px;
-            color: #ccc;
-            font-family: monospace;
-            font-size: 0.85rem;
-            cursor: pointer;
-            user-select: none;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            line-height: 1.2;
-            transition: background 0.06s, border-color 0.06s;
-        }
-
-        .btn .key  { font-size: 1rem; font-weight: bold; }
-        .btn .hint { font-size: 0.55rem; color: #555; }
-        .btn:hover { background: #2a2a2a; border-color: #555; }
-        .btn.active { background: #0a3a44; border-color: #0cf; color: #0cf; }
-        .btn.stop { color: #f55; border-color: #533; }
-        .btn.stop.active { background: #3a0a0a; border-color: #f55; color: #f55; }
-
-        .btn-empty { visibility: hidden; }
-
-        #speed-section {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            min-width: 140px;
-        }
-
-        #speed-section label {
+        #control-note {
             font-size: 0.65rem;
-            color: #555;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+            color: #444;
+            text-align: center;
+            padding: 6px 0;
         }
-
-        #speed-display { font-size: 1.4rem; color: #0cf; }
-
-        input[type=range] { width: 100%; accent-color: #0cf; }
-
-        #status-row {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-top: 4px;
-        }
-
-        #active-label {
-            font-size: 0.65rem;
-            color: #555;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        #active-cmd { font-size: 0.85rem; color: #888; }
-        #active-cmd.moving { color: #4f4; }
-
-        #keyboard-hint { font-size: 0.6rem; color: #444; margin-top: 6px; }
     </style>
 </head>
 <body>
@@ -178,42 +107,7 @@
         <div id="left-col">
             <img id="video-feed" src="/video_feed" alt="No video">
 
-            <div class="panel">
-                <h2>Drive Control</h2>
-                <div id="control-layout">
-                    <div id="dpad">
-                        <button class="btn" data-cmd="q"><span class="key">Q</span><span class="hint">CCW</span></button>
-                        <button class="btn" data-cmd="w"><span class="key">W</span><span class="hint">FWD</span></button>
-                        <button class="btn" data-cmd="e"><span class="key">E</span><span class="hint">CW</span></button>
-                        <button class="btn" data-cmd="a"><span class="key">A</span><span class="hint">LEFT</span></button>
-                        <button class="btn stop" data-cmd="x"><span class="key">X</span><span class="hint">STOP</span></button>
-                        <button class="btn" data-cmd="d"><span class="key">D</span><span class="hint">RIGHT</span></button>
-                        <div class="btn-empty"></div>
-                        <button class="btn" data-cmd="s"><span class="key">S</span><span class="hint">REV</span></button>
-                        <div class="btn-empty"></div>
-                    </div>
-
-                    <div id="speed-section">
-                        <label>Speed</label>
-                        <div id="speed-display">150</div>
-                        <input type="range" id="speed-slider" min="0" max="255" value="150">
-
-                        <div id="status-row">
-                            <span id="active-label">Status</span>
-                            <span id="active-cmd">IDLE</span>
-                        </div>
-
-                        <button class="btn" id="reset-btn" style="width:100%;height:36px;margin-top:4px;">
-                            <span class="key" style="font-size:0.8rem">R — Reset Ticks</span>
-                        </button>
-
-                        <div id="keyboard-hint">
-                            WASD / QE / X or click buttons<br>
-                            Hold to move · Release to stop
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <div id="control-note">Drive control: terminal window (drive_controller.py)</div>
         </div>
 
         <!-- ── Right: odometry + node status ── -->
@@ -243,119 +137,7 @@
     </div>
 
     <script>
-        // ── State ──────────────────────────────────────────────
-        let currentSpeed = 150;
-        let activeCmd    = null;
-        let holdInterval = null;
         const knownStats = {};
-
-        // ── Command sender ─────────────────────────────────────
-        function sendCmd(cmd) {
-            fetch('/cmd', {
-                method:  'POST',
-                headers: {'Content-Type': 'application/json'},
-                body:    JSON.stringify({ cmd, speed: currentSpeed }),
-            }).catch(() => {});
-        }
-
-        // ── Hold-to-move helpers ────────────────────────────────
-        function startHold(cmd) {
-            if (cmd === activeCmd) return;
-            stopHold();
-            activeCmd = cmd;
-            sendCmd(cmd);
-            if (cmd !== 'x') {
-                holdInterval = setInterval(() => sendCmd(cmd), 300);
-            }
-            updateStatus(cmd);
-            highlightBtn(cmd);
-        }
-
-        function stopHold() {
-            if (holdInterval) { clearInterval(holdInterval); holdInterval = null; }
-            if (activeCmd && activeCmd !== 'x') {
-                sendCmd('x');
-            }
-            activeCmd = null;
-            updateStatus('x');
-            highlightBtn(null);
-        }
-
-        function updateStatus(cmd) {
-            const el  = document.getElementById('active-cmd');
-            const map = { w:'FORWARD', s:'REVERSE', a:'STRAFE LEFT', d:'STRAFE RIGHT',
-                          q:'ROTATE CCW', e:'ROTATE CW', x:'IDLE', r:'RESET TICKS' };
-            el.textContent  = map[cmd] ?? cmd.toUpperCase();
-            el.className    = (cmd && cmd !== 'x') ? 'moving' : '';
-        }
-
-        function highlightBtn(cmd) {
-            document.querySelectorAll('.btn[data-cmd]').forEach(b => {
-                b.classList.toggle('active', b.dataset.cmd === cmd);
-            });
-        }
-
-        // ── Keyboard ───────────────────────────────────────────
-        const keyMap = {
-            'w':'w', 's':'s', 'a':'a', 'd':'d',
-            'q':'q', 'e':'e', 'x':'x',
-            'ArrowUp':'w', 'ArrowDown':'s',
-            'ArrowLeft':'a', 'ArrowRight':'d',
-        };
-
-        const heldKeys = new Set();
-
-        document.addEventListener('keydown', ev => {
-            const cmd = keyMap[ev.key];
-            if (!cmd) return;
-            ev.preventDefault();
-            if (heldKeys.has(ev.key)) return;
-            heldKeys.add(ev.key);
-            startHold(cmd);
-        });
-
-        document.addEventListener('keyup', ev => {
-            const cmd = keyMap[ev.key];
-            if (!cmd) return;
-            heldKeys.delete(ev.key);
-            if (cmd === activeCmd) stopHold();
-        });
-
-        // ── D-Pad buttons ───────────────────────────────────────
-        document.querySelectorAll('.btn[data-cmd]').forEach(btn => {
-            const cmd = btn.dataset.cmd;
-
-            btn.addEventListener('pointerdown', ev => {
-                ev.preventDefault();
-                btn.setPointerCapture(ev.pointerId);
-                if (cmd === 'x') { stopHold(); sendCmd('x'); updateStatus('x'); highlightBtn('x'); }
-                else if (cmd === 'r') { sendCmd('r'); updateStatus('r'); }
-                else startHold(cmd);
-            });
-
-            btn.addEventListener('pointerup',     () => { if (cmd === activeCmd) stopHold(); });
-            btn.addEventListener('pointercancel', () => { if (cmd === activeCmd) stopHold(); });
-        });
-
-        // ── Reset Ticks button ─────────────────────────────────
-        document.getElementById('reset-btn').addEventListener('click', () => {
-            sendCmd('r');
-            updateStatus('r');
-        });
-
-        // ── Speed slider ───────────────────────────────────────
-        const slider    = document.getElementById('speed-slider');
-        const speedDisp = document.getElementById('speed-display');
-
-        slider.addEventListener('input', () => {
-            currentSpeed = parseInt(slider.value);
-            speedDisp.textContent = currentSpeed;
-            fetch('/cmd', {
-                method:  'POST',
-                headers: {'Content-Type': 'application/json'},
-                body:    JSON.stringify({ cmd: 'speed', speed: currentSpeed }),
-            }).catch(() => {});
-        });
 
         // ── Odometry poll (200 ms) ─────────────────────────────
         async function updateOdom() {

@@ -106,6 +106,11 @@ def main():
                           os.path.join(LOCAL_ROOT, "computer/topics/counter_publisher.py")]),
         subprocess.Popen([sys.executable,
                           os.path.join(LOCAL_ROOT, "computer/website/dashboard_server.py")]),
+        # Drive controller gets its own console window — keyboard hooks work globally
+        subprocess.Popen(
+            [sys.executable, os.path.join(LOCAL_ROOT, "computer/drive_controller.py")],
+            creationflags=subprocess.CREATE_NEW_CONSOLE,
+        ),
     ]
 
     # 7. Run the orchestrator in the foreground — it owns the shutdown lifecycle
